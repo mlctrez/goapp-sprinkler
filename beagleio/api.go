@@ -17,15 +17,16 @@ type Pin struct {
 }
 
 func (h *HttpApi) Routes(engine *gin.Engine) {
-	engine.GET("/api/pins", func(context *gin.Context) {
-		context.JSON(http.StatusOK, h.currentState())
-	})
+	engine.GET("/api/pins", h.pins)
 	engine.POST("/api/pins/:pin/:state", func(context *gin.Context) {
-		_ = h.Api.InitializePins()
+		h.Api.PinsOff()
 		h.Api.ChangePin(context.Param("pin"), context.Param("state"))
-		context.JSON(http.StatusOK, h.currentState())
+		h.pins(context)
 	})
+}
 
+func (h *HttpApi) pins(context *gin.Context) {
+	context.JSON(http.StatusOK, h.currentState())
 }
 
 func (h *HttpApi) currentState() map[string][]Pin {

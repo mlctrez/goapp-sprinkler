@@ -109,12 +109,13 @@ func (a *Api) ReadPin(thePin int) (state string) {
 		path := filepath.Join(a.GpioPaths[thePin], "value")
 		var data []byte
 		if data, err = os.ReadFile(path); err == nil {
-			return string(data)
+			state = strings.TrimSpace(string(data))
 		} else {
 			fmt.Println("ReadPin error", err)
 		}
 	}
-	return ""
+	fmt.Printf("ReadPin %d %q\n", thePin, state)
+	return state
 }
 
 func (a *Api) PinsOff() {
