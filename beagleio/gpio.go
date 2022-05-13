@@ -49,7 +49,7 @@ func New() *Api {
 
 func writeString(path, value string) {
 
-	fmt.Println("writeString", path, value)
+	//fmt.Println("writeString", path, value)
 
 	var f *os.File
 	var err error
@@ -114,7 +114,7 @@ func (a *Api) ReadPin(thePin int) (state string) {
 			fmt.Println("ReadPin error", err)
 		}
 	}
-	fmt.Printf("ReadPin %d %q\n", thePin, state)
+	//fmt.Printf("ReadPin %d %q\n", thePin, state)
 	return state
 }
 
