@@ -23,7 +23,7 @@ type Schedule struct {
 
 func New() (*Schedule, error) {
 
-	natsConn, err := nats.Connect("hats://goservice:19201")
+	natsConn, err := nats.Connect(os.Getenv("NATS_SERVER"))
 	if err != nil {
 		return nil, err
 	}

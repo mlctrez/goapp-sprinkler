@@ -36,6 +36,11 @@ func main() {
 
 func (t *svc) Start(_ service.Service) (err error) {
 
+	defer func() {
+		if err != nil {
+			t.Log().Error(err)
+		}
+	}()
 	t.api = beagleio.New()
 
 	t.schedule, err = schedule.New()
