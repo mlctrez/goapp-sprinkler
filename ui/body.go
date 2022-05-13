@@ -50,7 +50,6 @@ func (b *Body) togglePin(ctx app.Context, action app.Action) {
 }
 
 func (b *Body) Render() app.UI {
-	app.Log("render")
 	if !b.Mounted() || b.pins == nil {
 		return app.Div()
 	}
@@ -66,7 +65,6 @@ type Pin struct {
 }
 
 func (p Pin) OtherState() string {
-	app.Log()
 	if p.State == "1" {
 		return "off"
 	}
@@ -74,7 +72,6 @@ func (p Pin) OtherState() string {
 }
 
 func (p Pin) UI(b *Body) app.UI {
-	app.Log(fmt.Sprintf("%+v", p))
 	toggle := func(ctx app.Context, e app.Event) { ctx.NewAction("togglePin", app.T("pin", p.Number)) }
 	stateString := "Off"
 	if p.State == "1" {
