@@ -45,7 +45,8 @@ func Run() (shutdownFunc func(ctx context.Context) error, err error) {
 
 	engine := gin.New()
 
-	engine.Use(gin.Logger(), gin.Recovery(), brotli.Brotli(brotli.DefaultCompression))
+	// gin.Logger(),
+	engine.Use(gin.Recovery(), brotli.Brotli(brotli.DefaultCompression))
 
 	api := beagleio.New()
 	if err = api.InitializePins(); err != nil {

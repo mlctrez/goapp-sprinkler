@@ -96,17 +96,17 @@ func (p Pin) UI(b *Body) app.UI {
 }
 
 func (b *Body) refreshPins() {
-	response, err := fetch.Fetch(apiUrl(), &fetch.Opts{
-		Method: "GET",
-	})
+	response, err := fetch.Fetch(apiUrl(), &fetch.Opts{Method: "GET"})
 	if err != nil {
 		app.Log("fetch error ", err)
+		return
 	}
 
 	m := map[string][]Pin{}
 	err = json.Unmarshal(response.Body, &m)
 	if err != nil {
 		app.Log("unmarshal error ", err)
+		return
 	}
 	b.pins = m["pins"]
 	b.Update()

@@ -9,6 +9,7 @@ import (
 	"github.com/kardianos/service"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"github.com/mlctrez/goapp-sprinkler/beagleio"
+	"github.com/mlctrez/goapp-sprinkler/schedule"
 	"github.com/mlctrez/goapp-sprinkler/server"
 	"github.com/mlctrez/goapp-sprinkler/ui"
 	"github.com/mlctrez/servicego"
@@ -18,6 +19,7 @@ type svc struct {
 	servicego.Defaults
 	serverShutdown func(ctx context.Context) error
 	api            *beagleio.Api
+	schedule       *schedule.Schedule
 }
 
 func main() {
@@ -36,15 +38,16 @@ func (t *svc) Start(_ service.Service) (err error) {
 
 	t.api = beagleio.New()
 
+	t.schedule, err = schedule.New()
+	if err != nil {
+		return err
+	}
+
 	t.serverShutdown, err = server.Run()
 	return err
 }
 
 func (t *svc) Stop(_ service.Service) (err error) {
-
-	if t.api != nil {
-		t.api.Shutdown()
-	}
 
 	if t.serverShutdown != nil {
 
@@ -56,5 +59,14 @@ func (t *svc) Stop(_ service.Service) (err error) {
 			os.Exit(-1)
 		}
 	}
+
+	if t.schedule != nil {
+		t.schedule.Stop()
+	}
+
+	if t.api != nil {
+		t.api.Shutdown()
+	}
+
 	return err
 }
