@@ -1,8 +1,10 @@
 package beagleio
 
 import (
+	"fmt"
 	"log"
 	"os"
+	"path/filepath"
 	"strconv"
 	"strings"
 )
@@ -30,37 +32,54 @@ func New() *Api {
 		},
 	}
 
-	api.InitializePins()
+	if os.Getenv("DEV") != "" {
+		var paths []string
+		for i := 0; i < 6; i++ {
+			p := fmt.Sprintf("temp/gpio/pin%d", i)
+			_ = os.MkdirAll(p, 0755)
+			_ = os.WriteFile(filepath.Join(p, "direction"), []byte("unset"), 0666)
+			_ = os.WriteFile(filepath.Join(p, "value"), []byte("unset"), 0666)
+			paths = append(paths, p)
+		}
+		api = &Api{GpioPaths: paths}
+	}
 
 	return api
 }
 
-func writeString(path, value string) (err error) {
+func writeString(path, value string) {
+
+	fmt.Println("writeString", path, value)
 
 	var f *os.File
+	var err error
 
 	mode := os.O_WRONLY | os.O_TRUNC
 
 	if f, err = os.OpenFile(path, mode, 0666); err != nil {
+		log.Println("writeString os.OpenFile", err)
 		return
 	}
 
-	defer f.Close()
+	defer func() {
+		errClose := f.Close()
+		if errClose != nil {
+			log.Println("writeString f.Close()", errClose)
+		}
+	}()
 
 	_, err = f.Write([]byte(value))
+	if err != nil {
+		log.Println("writeString f.Write", err)
+	}
 
 	return
 }
 
 func (a *Api) InitializePins() error {
 
-	log.Println("InitializePins")
-
 	for _, path := range a.GpioPaths {
-		err := writeString(path+"/direction", "out")
-		if err != nil {
-			log.Println(err)
-		}
+		writeString(filepath.Join(path, "direction"), "out")
 	}
 
 	a.PinsOff()
@@ -74,25 +93,36 @@ func (a *Api) ChangePin(pin, state string) {
 		return
 	}
 	if thePin >= 0 && thePin < len(a.GpioPaths) {
+		path := filepath.Join(a.GpioPaths[thePin], "value")
 		switch strings.ToLower(state) {
 		case "on", "true":
-			log.Printf("turning on pin %d\n", thePin)
-			writeString(a.GpioPaths[thePin]+"/value", "1")
+			writeString(path, "1")
 		default:
-			log.Printf("turning off pin %d\n", thePin)
-			writeString(a.GpioPaths[thePin]+"/value", "0")
+			writeString(path, "0")
 		}
 	}
 }
 
+func (a *Api) ReadPin(thePin int) (state string) {
+	var err error
+	if thePin >= 0 && thePin < len(a.GpioPaths) {
+		path := filepath.Join(a.GpioPaths[thePin], "value")
+		var data []byte
+		if data, err = os.ReadFile(path); err == nil {
+			return string(data)
+		} else {
+			fmt.Println("ReadPin error", err)
+		}
+	}
+	return ""
+}
+
 func (a *Api) PinsOff() {
 	for _, p := range a.GpioPaths {
-		writeString(p+"/value", "0")
+		writeString(filepath.Join(p, "value"), "0")
 	}
 }
 
 func (a *Api) Shutdown() {
-	log.Println("shutting down all zones")
-	// force all zones low to minimize water bill
 	a.PinsOff()
 }

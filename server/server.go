@@ -10,10 +10,12 @@ import (
 	"net"
 	"net/http"
 	"os"
+	"strings"
 
 	brotli "github.com/anargu/gin-brotli"
 	"github.com/gin-gonic/gin"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/mlctrez/goapp-sprinkler/beagleio"
 )
 
 //go:embed web/*
@@ -35,7 +37,7 @@ func Run() (shutdownFunc func(ctx context.Context) error, err error) {
 		return nil, err
 	}
 
-	if isDevelopment() {
+	if IsDevelopment() {
 		fmt.Printf("running on http://%s\n", address)
 	} else {
 		gin.SetMode(gin.ReleaseMode)
@@ -45,8 +47,14 @@ func Run() (shutdownFunc func(ctx context.Context) error, err error) {
 
 	engine.Use(gin.Logger(), gin.Recovery(), brotli.Brotli(brotli.DefaultCompression))
 
-	staticHandler := http.FileServer(http.FS(webDirectory))
+	api := beagleio.New()
+	if err = api.InitializePins(); err != nil {
+		return nil, err
+	}
+	httpApi := &beagleio.HttpApi{Api: api}
+	httpApi.Routes(engine)
 
+	staticHandler := http.FileServer(http.FS(webDirectory))
 	engine.GET("/web/:path", gin.WrapH(staticHandler))
 
 	engine.NoRoute(gin.WrapH(BuildHandler()))
@@ -55,7 +63,12 @@ func Run() (shutdownFunc func(ctx context.Context) error, err error) {
 	server := &http.Server{Handler: engine}
 
 	go func() {
-		serveErr := server.ServeTLS(listener, "cert.pem", "cert.key")
+		var serveErr error
+		if strings.HasSuffix(listener.Addr().String(), ":443") {
+			serveErr = server.ServeTLS(listener, "cert.pem", "cert.key")
+		} else {
+			serveErr = server.Serve(listener)
+		}
 		if serveErr != nil && serveErr != http.ErrServerClosed {
 			log.Println(err)
 		}

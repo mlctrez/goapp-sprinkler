@@ -8,14 +8,16 @@ import (
 
 	"github.com/kardianos/service"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/mlctrez/goapp-sprinkler/beagleio"
 	"github.com/mlctrez/goapp-sprinkler/server"
 	"github.com/mlctrez/goapp-sprinkler/ui"
 	"github.com/mlctrez/servicego"
 )
 
-type twoFactor struct {
+type svc struct {
 	servicego.Defaults
 	serverShutdown func(ctx context.Context) error
+	api            *beagleio.Api
 }
 
 func main() {
@@ -25,17 +27,25 @@ func main() {
 	if app.IsClient {
 		app.RunWhenOnBrowser()
 	} else {
-		servicego.Run(&twoFactor{})
+		servicego.Run(&svc{})
 	}
 
 }
 
-func (t *twoFactor) Start(_ service.Service) (err error) {
+func (t *svc) Start(_ service.Service) (err error) {
+
+	t.api = beagleio.New()
+
 	t.serverShutdown, err = server.Run()
 	return err
 }
 
-func (t *twoFactor) Stop(_ service.Service) (err error) {
+func (t *svc) Stop(_ service.Service) (err error) {
+
+	if t.api != nil {
+		t.api.Shutdown()
+	}
+
 	if t.serverShutdown != nil {
 
 		stopContext, cancel := context.WithTimeout(context.Background(), time.Second*2)

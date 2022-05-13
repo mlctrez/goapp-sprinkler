@@ -8,6 +8,7 @@ require (
 	github.com/kardianos/service v1.2.1
 	github.com/maxence-charriere/go-app/v9 v9.4.1
 	github.com/mlctrez/servicego v1.3.1
+	github.com/mlctrez/wasm-fetch v0.2.0
 )
 
 require (

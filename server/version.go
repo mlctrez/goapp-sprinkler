@@ -23,7 +23,7 @@ func GoAppVersion() string {
 
 func getRuntimeVersion() string {
 	if runtimeVersion == "" {
-		if isDevelopment() {
+		if IsDevelopment() {
 			t := time.Now().UTC().String()
 			runtimeVersion = fmt.Sprintf(`%x`, sha1.Sum([]byte(t)))
 		} else {
@@ -33,12 +33,12 @@ func getRuntimeVersion() string {
 	return runtimeVersion
 }
 
-func isDevelopment() bool {
+func IsDevelopment() bool {
 	return os.Getenv("DEV") != ""
 }
 
 func autoUpdateInterval() time.Duration {
-	if isDevelopment() {
+	if IsDevelopment() {
 		return 3 * time.Second
 	}
 	return 24 * time.Hour
