@@ -30,10 +30,17 @@ func New() (*Schedule, error) {
 	s := &Schedule{chron: cron.New(), beagle: beagleio.New(), natsConn: natsConn}
 	err = s.subscribeLightStateChange()
 	if err != nil {
-		s.natsConn.Close()
+		s.Stop()
 		return nil, err
 	}
 	_, err = s.chron.AddFunc("0 1 * * *", s.SprinklerCheckDate)
+	if err != nil {
+		s.Stop()
+		return nil, err
+	}
+
+	s.chron.Start()
+
 	return s, err
 }
 
