@@ -7,7 +7,7 @@ MODULE=$(shell grep ^module go.mod | awk '{print $$2;}')
 LD_FLAGS="-w -X $(MODULE)/server.Version=$(VERSION) -X $(MODULE)/server.Commit=$(COMMIT)"
 
 run: binary
-	@DEV=1 ./temp/$(APP_NAME)
+	@DEV=1 NATS_SERVER=nats://goservice:19201 ./temp/$(APP_NAME)
 
 wasm:
 	@mkdir -p server/web

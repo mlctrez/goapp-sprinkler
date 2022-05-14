@@ -94,5 +94,6 @@ func BuildHandler() *app.Handler {
 		Version:            getRuntimeVersion(),
 		Styles:             []string{},
 		Title:              "go-app starter",
+		BackgroundColor:    "#222",
 	}
 }

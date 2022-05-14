@@ -50,10 +50,11 @@ func (b *Body) togglePin(ctx app.Context, action app.Action) {
 }
 
 func (b *Body) Render() app.UI {
+	div := app.Div().Style("text-align", "center")
 	if !b.Mounted() || b.pins == nil {
-		return app.Div()
+		return div.Body(app.H2().Text("No Data. Is Wifi On?"))
 	}
-	return app.Div().Body(
+	return div.Body(
 		app.Range(b.pins).Slice(func(i int) app.UI { return b.pins[i].UI(b) }),
 	)
 }
