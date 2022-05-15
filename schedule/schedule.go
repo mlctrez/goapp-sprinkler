@@ -48,6 +48,7 @@ const DateOnly = "20060102"
 const LastDateFile = "last.date"
 
 func (s *Schedule) SprinklerCheckDate() {
+	fmt.Println("SprinklerCheckDate")
 	var lastRun time.Time
 	if file, err := os.ReadFile(LastDateFile); os.IsNotExist(err) {
 		lastRun = time.Now().Add(-48 * time.Hour)
