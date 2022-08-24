@@ -2,12 +2,14 @@ package beagleio
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
 
 type HttpApi struct {
-	Api *Api
+	Api       *Api
+	StartStop func(startStop *bool) bool
 }
 
 type Pin struct {
@@ -23,6 +25,13 @@ func (h *HttpApi) Routes(engine *gin.Engine) {
 		h.Api.ChangePin(context.Param("pin"), context.Param("state"))
 		h.pins(context)
 	})
+	engine.POST("/api/schedule/:state", func(context *gin.Context) {
+		running := context.Param("state") == "on"
+		h.StartStop(&running)
+		time.Sleep(50 * time.Millisecond)
+		h.pins(context)
+	})
+
 }
 
 func (h *HttpApi) pins(context *gin.Context) {
@@ -36,6 +45,12 @@ func (h *HttpApi) currentState() map[string][]Pin {
 		pin.State = h.Api.ReadPin(i)
 		pins = append(pins, pin)
 	}
+	startStopPin := Pin{Number: -1, Path: ""}
+	startStopPin.State = "stopped"
+	if h.StartStop(nil) {
+		startStopPin.State = "running"
+	}
+	pins = append(pins, startStopPin)
 	res := map[string][]Pin{"pins": pins}
 	return res
 }

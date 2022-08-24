@@ -6,13 +6,14 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	brotli "github.com/anargu/gin-brotli"
+	"github.com/mlctrez/goapp-sprinkler/schedule"
 	"log"
 	"net"
 	"net/http"
 	"os"
 	"strings"
 
-	brotli "github.com/anargu/gin-brotli"
 	"github.com/gin-gonic/gin"
 	"github.com/maxence-charriere/go-app/v9/pkg/app"
 	"github.com/mlctrez/goapp-sprinkler/beagleio"
@@ -21,7 +22,7 @@ import (
 //go:embed web/*
 var webDirectory embed.FS
 
-func Run() (shutdownFunc func(ctx context.Context) error, err error) {
+func Run(s *schedule.Schedule) (shutdownFunc func(ctx context.Context) error, err error) {
 
 	address := os.Getenv("ADDRESS")
 	if address == "" {
@@ -45,14 +46,17 @@ func Run() (shutdownFunc func(ctx context.Context) error, err error) {
 
 	engine := gin.New()
 
-	// gin.Logger(),
-	engine.Use(gin.Recovery(), brotli.Brotli(brotli.DefaultCompression))
+	if IsDevelopment() {
+		engine.Use(gin.Logger(), gin.Recovery(), brotli.Brotli(brotli.DefaultCompression))
+	} else {
+		engine.Use(gin.Recovery(), brotli.Brotli(brotli.DefaultCompression))
+	}
 
 	api := beagleio.New()
 	if err = api.InitializePins(); err != nil {
 		return nil, err
 	}
-	httpApi := &beagleio.HttpApi{Api: api}
+	httpApi := &beagleio.HttpApi{Api: api, StartStop: s.StartStop}
 	httpApi.Routes(engine)
 
 	staticHandler := http.FileServer(http.FS(webDirectory))

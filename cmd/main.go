@@ -48,7 +48,7 @@ func (t *svc) Start(_ service.Service) (err error) {
 		return err
 	}
 
-	t.serverShutdown, err = server.Run()
+	t.serverShutdown, err = server.Run(t.schedule)
 	return err
 }
 

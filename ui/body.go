@@ -12,7 +12,8 @@ import (
 
 type Body struct {
 	app.Compo
-	pins []Pin
+	pins  []Pin
+	onOff Pin
 }
 
 func (b *Body) OnAppUpdate(ctx app.Context) {
@@ -33,8 +34,16 @@ func (b *Body) togglePin(ctx app.Context, action app.Action) {
 		app.Log(err)
 		return
 	}
-	p := b.pins[pin]
-	url := fmt.Sprintf("%s/%d/%s", apiUrl(), p.Number, p.OtherState())
+	var p Pin
+	var url string
+	fmt.Println("Pin is", pin)
+	if pin == -1 {
+		p = b.pins[6]
+		url = fmt.Sprintf("%s/schedule/%s", apiUrl(), p.OtherState())
+	} else {
+		p = b.pins[pin]
+		url = fmt.Sprintf("%s/pins/%d/%s", apiUrl(), p.Number, p.OtherState())
+	}
 	var response *fetch.Response
 	response, err = fetch.Fetch(url, &fetch.Opts{Method: http.MethodPost})
 	if err != nil {
@@ -54,9 +63,14 @@ func (b *Body) Render() app.UI {
 	if !b.Mounted() || b.pins == nil {
 		return div.Body(app.H2().Text("No Data. Is Wifi On?"))
 	}
-	return div.Body(
-		app.Range(b.pins).Slice(func(i int) app.UI { return b.pins[i].UI(b) }),
-	)
+
+	var buttons []app.UI
+
+	for _, pin := range b.pins {
+		buttons = append(buttons, pin.UI())
+	}
+
+	return div.Body(buttons...)
 }
 
 type Pin struct {
@@ -66,25 +80,37 @@ type Pin struct {
 }
 
 func (p Pin) OtherState() string {
+	if p.Number == -1 {
+		if p.State == "running" {
+			return "off"
+		}
+		return "on"
+	}
 	if p.State == "1" {
 		return "off"
 	}
 	return "on"
 }
 
-func (p Pin) UI(b *Body) app.UI {
+func (p Pin) UI() app.UI {
+
 	toggle := func(ctx app.Context, e app.Event) { ctx.NewAction("togglePin", app.T("pin", p.Number)) }
 	stateString := "Off"
 	if p.State == "1" {
 		stateString = "On"
 	}
 	message := fmt.Sprintf("Pin %d %s", p.Number, stateString)
+
+	if p.Number == -1 {
+		message = p.State
+	}
+
 	text := app.Span().Style("font-size", "48px").
 		Style("padding", "0 25px 0 25px").Text(message)
 	button := app.Button().Body(text).OnClick(toggle).
 		Style("border-radius", "15px").Style("border-width", "0")
 
-	if stateString == "On" {
+	if stateString == "On" || stateString == "running" {
 		button.Style("background-color", "blue")
 	} else {
 		button.Style("background-color", "lightgrey")
@@ -97,7 +123,7 @@ func (p Pin) UI(b *Body) app.UI {
 }
 
 func (b *Body) refreshPins() {
-	response, err := fetch.Fetch(apiUrl(), &fetch.Opts{Method: "GET"})
+	response, err := fetch.Fetch(apiUrl()+"/pins", &fetch.Opts{Method: "GET"})
 	if err != nil {
 		app.Log("fetch error ", err)
 		return
@@ -115,5 +141,5 @@ func (b *Body) refreshPins() {
 
 func apiUrl() string {
 	url := app.Window().URL()
-	return url.Scheme + "://" + url.Host + "/api/pins"
+	return url.Scheme + "://" + url.Host + "/api"
 }

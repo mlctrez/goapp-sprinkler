@@ -23,7 +23,14 @@ type Schedule struct {
 
 func New() (*Schedule, error) {
 
-	natsConn, err := nats.Connect(os.Getenv("NATS_SERVER"))
+	opts := nats.Options{
+		AllowReconnect: true,
+		MaxReconnect:   -1,
+		ReconnectWait:  2 * time.Second,
+		Url:            os.Getenv("NATS_SERVER"),
+	}
+
+	natsConn, err := opts.Connect()
 	if err != nil {
 		return nil, err
 	}
@@ -171,18 +178,31 @@ func (s *Schedule) lightStateChange(msg *nats.Msg) {
 	}
 
 	if lsc.LightID == "aa2f65ccc32c03efc1d4d91a86ee03414f3b7893f6ce1b7e0020088122d0df61" {
-		if lsc.StateRequest.On {
-			if s.sprinklerRunningChan == nil {
-				fmt.Println("echo turned on the sprinkler")
-				go s.SprinklerRun()
-			}
-			return
+		s.StartStop(&lsc.StateRequest.On)
+	}
+
+}
+
+func (s *Schedule) StartStop(option *bool) bool {
+	if option == nil {
+		return s.Running()
+	}
+	if *option {
+		if !s.Running() {
+			fmt.Println("StartStop starting")
+			go s.SprinklerRun()
 		}
-		if s.sprinklerRunningChan != nil {
+	} else {
+		if s.Running() {
+			fmt.Println("StartStop stopping")
 			s.sprinklerRunningChan <- struct{}{}
 		}
 	}
+	return *option
+}
 
+func (s *Schedule) Running() bool {
+	return s.sprinklerRunningChan != nil
 }
 
 type LightStateChange struct {
