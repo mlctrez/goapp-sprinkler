@@ -40,7 +40,7 @@ func New() (*Schedule, error) {
 		s.Stop()
 		return nil, err
 	}
-	_, err = s.chron.AddFunc("0 1 * * *", s.SprinklerCheckDate)
+	_, err = s.chron.AddFunc("0 11 * * *", s.SprinklerCheckDate)
 	if err != nil {
 		s.Stop()
 		return nil, err
