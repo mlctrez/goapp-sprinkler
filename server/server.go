@@ -46,10 +46,12 @@ func Run(s *schedule.Schedule) (shutdownFunc func(ctx context.Context) error, er
 
 	engine := gin.New()
 
+	compresser := brotli.Brotli(brotli.DefaultCompression)
+	_ = compresser
 	if IsDevelopment() {
-		engine.Use(gin.Logger(), gin.Recovery(), brotli.Brotli(brotli.DefaultCompression))
+		engine.Use(gin.Logger(), gin.Recovery())
 	} else {
-		engine.Use(gin.Recovery(), brotli.Brotli(brotli.DefaultCompression))
+		engine.Use(gin.Recovery())
 	}
 
 	api := beagleio.New()
@@ -62,7 +64,15 @@ func Run(s *schedule.Schedule) (shutdownFunc func(ctx context.Context) error, er
 	staticHandler := http.FileServer(http.FS(webDirectory))
 	engine.GET("/web/:path", gin.WrapH(staticHandler))
 
-	engine.NoRoute(gin.WrapH(BuildHandler()))
+	handler := BuildHandler()
+	ginHandler := gin.WrapH(handler)
+	engine.GET("/", ginHandler)
+	engine.GET("/app.css", ginHandler)
+	engine.GET("/app.js", ginHandler)
+	engine.GET("/app-worker.js", ginHandler)
+	engine.GET("/wasm_exec.js", ginHandler)
+	engine.GET("/manifest.webmanifest", ginHandler)
+
 	engine.RedirectTrailingSlash = false
 
 	server := &http.Server{Handler: engine}
@@ -91,6 +101,7 @@ func BuildHandler() *app.Handler {
 		Icon: app.Icon{
 			Default: "/web/logo-192.png",
 			Large:   "/web/logo-512.png",
+			SVG:     "/web/logo-512.svg",
 		},
 		ShortName:       "sprinkler",
 		Version:         getRuntimeVersion(),

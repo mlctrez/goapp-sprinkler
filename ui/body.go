@@ -23,7 +23,8 @@ func (b *Body) OnAppUpdate(ctx app.Context) {
 }
 
 func (b *Body) OnMount(ctx app.Context) {
-	ctx.Async(b.refreshPins)
+	//ctx.Async(b.refreshPins)
+	b.refreshPins()
 	ctx.Handle("togglePin", b.togglePin)
 }
 
