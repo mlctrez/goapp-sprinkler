@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 	fetch "github.com/mlctrez/wasm-fetch"
 )
 
@@ -136,7 +136,7 @@ func (b *Body) refreshPins() {
 		return
 	}
 	b.pins = m["pins"]
-	b.Update()
+	//b.Update()
 }
 
 func apiUrl() string {

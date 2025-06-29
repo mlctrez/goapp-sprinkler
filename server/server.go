@@ -15,7 +15,7 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 	"github.com/mlctrez/goapp-sprinkler/beagleio"
 )
 
@@ -85,19 +85,17 @@ func Run(s *schedule.Schedule) (shutdownFunc func(ctx context.Context) error, er
 func BuildHandler() *app.Handler {
 	return &app.Handler{
 		Author:      "TODO",
-		Description: "go-app starter",
-		Name:        "go-app starter",
+		Description: "sprinkler",
+		Name:        "sprinkler",
 		Scripts:     []string{},
 		Icon: app.Icon{
-			AppleTouch: "/web/logo-192.png",
-			Default:    "/web/logo-192.png",
-			Large:      "/web/logo-512.png",
+			Default: "/web/logo-192.png",
+			Large:   "/web/logo-512.png",
 		},
-		AutoUpdateInterval: autoUpdateInterval(),
-		ShortName:          "starter",
-		Version:            getRuntimeVersion(),
-		Styles:             []string{},
-		Title:              "go-app starter",
-		BackgroundColor:    "#222",
+		ShortName:       "sprinkler",
+		Version:         getRuntimeVersion(),
+		Styles:          []string{},
+		Title:           "sprinkler",
+		BackgroundColor: "#222",
 	}
 }

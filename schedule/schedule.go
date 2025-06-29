@@ -1,46 +1,44 @@
 package schedule
 
 import (
-	"encoding/json"
 	"fmt"
-	"log"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/mlctrez/goapp-sprinkler/beagleio"
-	"github.com/nats-io/go-nats"
 	"github.com/robfig/cron/v3"
 )
 
 type Schedule struct {
-	chron                *cron.Cron
-	beagle               *beagleio.Api
-	natsConn             *nats.Conn
-	lscSubscription      *nats.Subscription
+	chron  *cron.Cron
+	beagle *beagleio.Api
+	//natsConn             *nats.Conn
+	//lscSubscription      *nats.Subscription
 	sprinklerRunningChan chan struct{}
 }
 
 func New() (*Schedule, error) {
 
-	opts := nats.Options{
-		AllowReconnect: true,
-		MaxReconnect:   -1,
-		ReconnectWait:  2 * time.Second,
-		Url:            os.Getenv("NATS_SERVER"),
-	}
-
-	natsConn, err := opts.Connect()
-	if err != nil {
-		return nil, err
-	}
-	s := &Schedule{chron: cron.New(), beagle: beagleio.New(), natsConn: natsConn}
-	err = s.subscribeLightStateChange()
-	if err != nil {
-		s.Stop()
-		return nil, err
-	}
-	_, err = s.chron.AddFunc("0 11 * * *", s.SprinklerCheckDate)
+	//opts := nats.Options{
+	//	AllowReconnect: true,
+	//	MaxReconnect:   -1,
+	//	ReconnectWait:  2 * time.Second,
+	//	Url:            os.Getenv("NATS_SERVER"),
+	//}
+	//
+	//natsConn, err := opts.Connect()
+	//if err != nil {
+	//	return nil, err
+	//}
+	//s := &Schedule{chron: cron.New(), beagle: beagleio.New(), natsConn: natsConn}
+	s := &Schedule{chron: cron.New(), beagle: beagleio.New()}
+	//err = s.subscribeLightStateChange()
+	//if err != nil {
+	//	s.Stop()
+	//	return nil, err
+	//}
+	_, err := s.chron.AddFunc("0 11 * * *", s.SprinklerCheckDate)
 	if err != nil {
 		s.Stop()
 		return nil, err
@@ -148,40 +146,40 @@ func (s *Schedule) SprinklerRun() {
 }
 
 func (s *Schedule) Stop() {
-	if s.lscSubscription != nil {
-		err := s.lscSubscription.Unsubscribe()
-		if err != nil {
-			fmt.Println(err)
-		}
-	}
-	if s.natsConn != nil {
-		s.natsConn.Close()
-	}
+	//if s.lscSubscription != nil {
+	//	err := s.lscSubscription.Unsubscribe()
+	//	if err != nil {
+	//		fmt.Println(err)
+	//	}
+	//}
+	//if s.natsConn != nil {
+	//	s.natsConn.Close()
+	//}
 	s.chron.Stop()
 }
 
-func (s *Schedule) subscribeLightStateChange() error {
-	if subscribe, err := s.natsConn.Subscribe("lightStateChange", s.lightStateChange); err != nil {
-		return err
-	} else {
-		s.lscSubscription = subscribe
-		return nil
-	}
-}
+//func (s *Schedule) subscribeLightStateChange() error {
+//	if subscribe, err := s.natsConn.Subscribe("lightStateChange", s.lightStateChange); err != nil {
+//		return err
+//	} else {
+//		s.lscSubscription = subscribe
+//		return nil
+//	}
+//}
 
-func (s *Schedule) lightStateChange(msg *nats.Msg) {
-	lsc := &LightStateChange{}
-	err := json.Unmarshal(msg.Data, lsc)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-
-	if lsc.LightID == "aa2f65ccc32c03efc1d4d91a86ee03414f3b7893f6ce1b7e0020088122d0df61" {
-		s.StartStop(&lsc.StateRequest.On)
-	}
-
-}
+//func (s *Schedule) lightStateChange(msg *nats.Msg) {
+//	lsc := &LightStateChange{}
+//	err := json.Unmarshal(msg.Data, lsc)
+//	if err != nil {
+//		log.Println(err)
+//		return
+//	}
+//
+//	if lsc.LightID == "aa2f65ccc32c03efc1d4d91a86ee03414f3b7893f6ce1b7e0020088122d0df61" {
+//		s.StartStop(&lsc.StateRequest.On)
+//	}
+//
+//}
 
 func (s *Schedule) StartStop(option *bool) bool {
 	if option == nil {
@@ -205,13 +203,13 @@ func (s *Schedule) Running() bool {
 	return s.sprinklerRunningChan != nil
 }
 
-type LightStateChange struct {
-	GroupID      string       `json:"groupID"`
-	LightID      string       `json:"lightID"`
-	StateRequest StateRequest `json:"stateRequest"`
-}
-
-type StateRequest struct {
-	On  bool  `json:"on"`
-	Bri int32 `json:"bri"`
-}
+//type LightStateChange struct {
+//	GroupID      string       `json:"groupID"`
+//	LightID      string       `json:"lightID"`
+//	StateRequest StateRequest `json:"stateRequest"`
+//}
+//
+//type StateRequest struct {
+//	On  bool  `json:"on"`
+//	Bri int32 `json:"bri"`
+//}

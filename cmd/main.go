@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/kardianos/service"
-	"github.com/maxence-charriere/go-app/v9/pkg/app"
+	"github.com/maxence-charriere/go-app/v10/pkg/app"
 	"github.com/mlctrez/goapp-sprinkler/beagleio"
 	"github.com/mlctrez/goapp-sprinkler/schedule"
 	"github.com/mlctrez/goapp-sprinkler/server"
